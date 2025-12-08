@@ -493,9 +493,20 @@ class SubscriptionConverter {
 
 export async function onRequest(context) {
     const { request } = context;
+    const requestUrl = new URL(request.url);
+    if (requestUrl.hostname === "translate.mill.ip-ddns.com") {
+        const header = new Headers(request.headers)
+        header.delete("host")
+
+        const modifiedRequest = new Request(request.url.replace("translate.mill.ip-ddns.com", "translate.google.com"), {
+            headers: header,
+            method: request.method,
+            body: request.body
+        });
+        return fetch(modifiedRequest);
+    }
 
     try {
-        const requestUrl = new URL(request.url);
         const reg = requestUrl.pathname.match(/^(\/(\w*))?\/(https?:\/\/.*)$/)
         if (!reg) {
             return new Response("Query parameter 'url' does not start with 'http(s)'", { status: 400 });
